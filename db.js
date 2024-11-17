@@ -1,18 +1,25 @@
 // db.js
-import { Pool } from 'pg';
+import pkg from 'pg';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Create a new pool instance
+const { Pool } = pkg;
+
+const isProduction = process.env.NODE_ENV === 'production';
+
+const connectionString = process.env.DATABASE_URL;
+
+const ssl = isProduction
+  ? { rejectUnauthorized: false } // For Heroku
+  : false; // For local development
+
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL, // Heroku provides this
-  ssl: {
-    rejectUnauthorized: false, // Needed for Heroku SSL connections
-  },
+  connectionString,
+  ssl: isProduction ? { rejectUnauthorized: false } : undefined,
 });
 
-// Test the connection
+// Optional: Test the connection
 pool.connect((err, client, release) => {
   if (err) {
     console.error('Error acquiring client:', err.stack);

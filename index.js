@@ -6,6 +6,8 @@ import dotenv from 'dotenv';
 
 import flowerRoutes from './routes/flowers.js';
 import userRoutes from './routes/users.js';
+import reservationRoutes from './routes/reservations.js';
+import initAdmin from './initAdmin.js';
 
 dotenv.config();
 
@@ -15,9 +17,12 @@ app.use(cors());
 
 app.use('/api/flowers', flowerRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/reservations', reservationRoutes);
 
-const port = 3000;
+const port = process.env.PORT || 3000; // Use environment port or default to 3000
 
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+initAdmin().then(() => {
+  app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
+  });
 });
