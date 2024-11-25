@@ -145,12 +145,16 @@ Reservation Changes: Record all modifications to reservations for accountability
 Access Logs
 User Actions: Track user logins and significant actions performed within the system.
 Security Auditing: Use logs to monitor for suspicious activities and enhance system security.
-10. API Documentation
+10. Admin selects a reservation from the list of reservations.
+Transaction approval: Admin confirms that the reservation is valid and a transaction can be made.
+Inventory Update: The quantity of flowers involved in the reservation is subtracted from the inventory.
+Reservation Deletion: Once the transaction is completed, the reservation is deleted from the database.
+11. API Documentation
 Comprehensive Documentation
 Endpoint Details: Document all API endpoints with descriptions, request and response formats.
 Authentication Requirements: Specify which endpoints require JWT authentication and the necessary permissions.
 Example Requests: Provide sample requests and responses for developers.
-11. Non-Functional Requirements
+12. Non-Functional Requirements
 Scalability
 Architecture Design: Build the system to support up to 500 concurrent users seamlessly.
 Performance Optimization: Optimize database queries and server responses for high performance.
@@ -169,3 +173,4 @@ User Experience
 Responsive Design: Ensure the mobile app provides a consistent experience across different Android devices.
 Intuitive Interface: Design user interfaces that are easy to navigate and understand.
 Accessibility: Follow accessibility guidelines to make the app usable for all users.
+

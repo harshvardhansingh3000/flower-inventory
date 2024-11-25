@@ -111,5 +111,38 @@ router.put('/role/:id', verifyToken, async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+// Get all users (Admins only)
+router.get('/', verifyToken, async (req, res) => {
+  if (req.user.role !== 'Admin') {
+    return res.status(403).json({ error: 'Access denied' });
+  }
+  const sql = 'SELECT id, username, role FROM users';
+  try {
+    const result = await pool.query(sql);
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Update user role (Admins only)
+router.put('/:id/role', verifyToken, async (req, res) => {
+  if (req.user.role !== 'Admin') {
+    return res.status(403).json({ error: 'Access denied' });
+  }
+  const userId = req.params.id;
+  const { role } = req.body;
+  const sql = 'UPDATE users SET role = $1 WHERE id = $2 RETURNING id, username, role';
+  try {
+    const result = await pool.query(sql, [role, userId]);
+    if (result.rows.length === 0) {
+      res.status(404).json({ error: 'User not found' });
+    } else {
+      res.json(result.rows[0]);
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 export default router;
