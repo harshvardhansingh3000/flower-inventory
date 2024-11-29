@@ -15,11 +15,11 @@ class Flower {
   // Factory method to create a Flower object from JSON data
   factory Flower.fromJson(Map<String, dynamic> json) {
     return Flower(
-      id: json['id'],
-      name: json['name'],
-      description: json['description'],
-      quantity: json['quantity'],
-      threshold: json['threshold'],
+      id: json['id'] ?? 0,
+      name: json['name'] ?? 'N/A',
+      description: json['description'] ?? '',
+      quantity: json['quantity'] ?? 0,
+      threshold: json['threshold'] ?? 0,
     );
   }
   Map<String, dynamic> toJson() {

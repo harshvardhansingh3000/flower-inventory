@@ -8,6 +8,8 @@ import flowerRoutes from './routes/flowers.js';
 import userRoutes from './routes/users.js';
 import reservationRoutes from './routes/reservations.js';
 import initAdmin from './initAdmin.js';
+import auditRoutes from './routes/audit.js';
+
 
 dotenv.config();
 
@@ -18,6 +20,7 @@ app.use(cors());
 app.use('/api/flowers', flowerRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/reservations', reservationRoutes);
+app.use('/api/audit', auditRoutes);
 
 const port = process.env.PORT || 3000; // Use environment port or default to 3000
 

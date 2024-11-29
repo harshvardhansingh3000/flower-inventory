@@ -4,17 +4,20 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../../models/flower.dart';
 import '../../constants/app_constants.dart';
-import 'edit_flower_screen.dart';
+import 'dart:convert';
+import './edit_flower_screen.dart';
 
 class FlowerDetailsScreen extends StatefulWidget {
   final String token;
-  final Flower flower;
+  final Flower? flower;
   final String role;
+  final int? flowerId;
 
   FlowerDetailsScreen({
     required this.token,
-    required this.flower,
+    this.flower,
     required this.role,
+    this.flowerId,
   });
 
   @override
@@ -23,6 +26,35 @@ class FlowerDetailsScreen extends StatefulWidget {
 
 class _FlowerDetailsScreenState extends State<FlowerDetailsScreen> {
   bool _isDeleting = false;
+  Flower? _flower;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.flower != null) {
+      _flower = widget.flower;
+    } else if (widget.flowerId != null) {
+      _fetchFlowerDetails();
+    } else {
+      _showMessage('No flower information provided.');
+    }
+  }
+
+  Future<void> _fetchFlowerDetails() async {
+    final response = await http.get(
+      Uri.parse('http://10.0.2.2:3000/api/flowers/${widget.flowerId}'),
+      headers: {'Authorization': 'Bearer ${widget.token}'},
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      setState(() {
+        _flower = Flower.fromJson(data);
+      });
+    } else {
+      _showMessage('Failed to fetch flower details.');
+    }
+  }
 
   void _navigateToEditFlower() {
     Navigator.push(
@@ -30,7 +62,7 @@ class _FlowerDetailsScreenState extends State<FlowerDetailsScreen> {
       MaterialPageRoute(
         builder: (context) => EditFlowerScreen(
           token: widget.token,
-          flower: widget.flower,
+          flower: _flower!,
         ),
       ),
     ).then((_) {
@@ -39,7 +71,6 @@ class _FlowerDetailsScreenState extends State<FlowerDetailsScreen> {
   }
 
   void _deleteFlower() async {
-    // Show confirmation dialog
     bool confirmDelete = await showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -47,11 +78,11 @@ class _FlowerDetailsScreenState extends State<FlowerDetailsScreen> {
         content: Text('Are you sure you want to delete this flower?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(false), // Return false
+            onPressed: () => Navigator.of(context).pop(false),
             child: Text('Cancel'),
           ),
           TextButton(
-            onPressed: () => Navigator.of(context).pop(true), // Return true
+            onPressed: () => Navigator.of(context).pop(true),
             child: Text('Delete'),
           ),
         ],
@@ -64,19 +95,27 @@ class _FlowerDetailsScreenState extends State<FlowerDetailsScreen> {
       });
 
       final response = await http.delete(
-        Uri.parse('http://10.0.2.2:3000/api/flowers/${widget.flower.id}'),
+        Uri.parse('http://10.0.2.2:3000/api/flowers/${_flower!.id}'),
         headers: {'Authorization': 'Bearer ${widget.token}'},
       );
 
       if (response.statusCode == 200) {
-        Navigator.pop(context, true); // Indicate that a deletion occurred
+        // Successfully deleted
+        _showMessage('Flower deleted successfully.');
+        Navigator.pop(context, true); // Go back to the previous screen
       } else {
-        _showMessage('Failed to delete the flower.');
-        setState(() {
-          _isDeleting = false;
-        });
+        // Failure
+        _showMessage('Failed to delete flower.');
       }
+
+      setState(() {
+        _isDeleting = false;
+      });
     }
+  }
+
+  bool get canEditOrDelete {
+    return widget.role == 'Admin' || widget.role == 'Manager';
   }
 
   void _showMessage(String message) {
@@ -87,34 +126,44 @@ class _FlowerDetailsScreenState extends State<FlowerDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    bool canEdit = widget.role == 'Admin' || widget.role == 'Manager';
-
+    if (_flower == null) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text('Flower Details'),
+          backgroundColor: AppColors.primaryColor,
+        ),
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.flower.name),
+        title: Text('Flower Details'),
         backgroundColor: AppColors.primaryColor,
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Name: ${widget.flower.name}'),
+            Text('Name: ${widget.flower!.name}', style: AppStyles.detailTitle),
             SizedBox(height: 16),
-            Text('Description: ${widget.flower.description}'),
+            Text('Quantity: ${widget.flower!.quantity}',
+                style: AppStyles.detailContent),
             SizedBox(height: 16),
-            Text('Quantity: ${widget.flower.quantity}'),
+            Text('Threshold: ${widget.flower!.threshold}',
+                style: AppStyles.detailContent),
             SizedBox(height: 16),
-            Text('Threshold: ${widget.flower.threshold}'),
+            Text('Description: ${widget.flower!.description}',
+                style: AppStyles.detailContent),
             SizedBox(height: 24),
-            if (canEdit)
+            if (canEditOrDelete)
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   ElevatedButton(
                     style: AppStyles.buttonStyle,
                     onPressed: _navigateToEditFlower,
-                    child: Text('Update'),
+                    child: Text('Edit'),
                   ),
                   ElevatedButton(
                     style: AppStyles.buttonStyle.copyWith(

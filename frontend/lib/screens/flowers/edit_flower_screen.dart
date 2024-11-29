@@ -176,7 +176,7 @@ class _EditFlowerScreenState extends State<EditFlowerScreen> {
                     SizedBox(height: 16),
                     // Threshold Field
                     TextFormField(
-                      controller: _quantityController,
+                      controller: _thresholdController,
                       decoration: AppStyles.inputDecoration.copyWith(
                         labelText: 'Threshold',
                         prefixIcon: Icon(Icons.countertops),

@@ -2,12 +2,16 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
+
+// Import your screens
 import '../auth/login_screen.dart';
 import '../flowers/flowers_screen.dart';
 import '../reservations/view_reservations_screen.dart';
 import '../reservations/make_reservation_screen.dart';
 import '../audit_trail/audit_trail_screen.dart';
 import '../low_stock/low_stock_screen.dart';
+import '../admin/user_management_screen.dart'; // Import the User Management Screen
 
 class DashboardScreen extends StatefulWidget {
   final String token;
@@ -26,10 +30,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // List of widgets for each tab
   late List<Widget> _screens;
 
+  String? role;
+
   @override
   void initState() {
     super.initState();
+    _decodeToken();
+    _initializeScreens();
+  }
 
+  void _decodeToken() {
+    Map<String, dynamic> decodedToken = JwtDecoder.decode(widget.token);
+    setState(() {
+      role = decodedToken['role'];
+    });
+  }
+
+  void _initializeScreens() {
     _screens = [
       FlowersScreen(token: widget.token),
       ViewReservationsScreen(token: widget.token),
@@ -49,12 +66,43 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  // Helper method to get app bar title based on current index
+  String _getTitle() {
+    switch (_currentIndex) {
+      case 0:
+        return 'Flowers';
+      case 1:
+        return 'View Reservations';
+      case 2:
+        return 'Make Reservation';
+      case 3:
+        return 'Audit Trail';
+      case 4:
+        return 'Low Stock';
+      default:
+        return 'Dashboard';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(_getTitle()),
         actions: [
+          if (role == 'Admin')
+            IconButton(
+              icon: Icon(Icons.admin_panel_settings),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        UserManagementScreen(token: widget.token),
+                  ),
+                );
+              },
+            ),
           IconButton(
             icon: Icon(Icons.logout),
             onPressed: _logout,
@@ -95,23 +143,5 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ],
       ),
     );
-  }
-
-  // Helper method to get app bar title based on current index
-  String _getTitle() {
-    switch (_currentIndex) {
-      case 0:
-        return 'Flowers';
-      case 1:
-        return 'View Reservations';
-      case 2:
-        return 'Make Reservation';
-      case 3:
-        return 'Audit Trail';
-      case 4:
-        return 'Low Stock';
-      default:
-        return 'Dashboard';
-    }
   }
 }

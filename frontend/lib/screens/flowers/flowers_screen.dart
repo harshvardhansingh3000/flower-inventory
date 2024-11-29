@@ -7,6 +7,7 @@ import 'add_flower_screen.dart'; // Screen to add new flowers
 import 'flower_details_screen.dart'; // Screen to show flower details
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../../constants/app_constants.dart';
 
 class FlowersScreen extends StatefulWidget {
   final String token;
@@ -44,6 +45,7 @@ class _FlowersScreenState extends State<FlowersScreen> {
 
     if (response.statusCode == 200) {
       List<dynamic> data = jsonDecode(response.body);
+      print(data);
       setState(() {
         _flowers = data.map((json) => Flower.fromJson(json)).toList();
         _isLoading = false;
@@ -54,6 +56,12 @@ class _FlowersScreenState extends State<FlowersScreen> {
         _isLoading = false;
       });
     }
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 
   void _navigateToAddFlower() {
@@ -84,23 +92,35 @@ class _FlowersScreenState extends State<FlowersScreen> {
               itemCount: _flowers.length,
               itemBuilder: (context, index) {
                 final flower = _flowers[index];
-                return ListTile(
-                  title: Text(flower.name),
-                  subtitle: Text('Quantity: ${flower.quantity}'),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => FlowerDetailsScreen(
-                          token: widget.token,
-                          flower: flower,
-                          role: role!,
+                return Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => FlowerDetailsScreen(
+                            token: widget.token,
+                            flower: flower,
+                            role: role!,
+                          ),
                         ),
+                      ).then((_) => _fetchFlowers());
+                    },
+                    child: Container(
+                      decoration: AppStyles.cardDecoration,
+                      child: ListTile(
+                        leading: Icon(Icons.local_florist,
+                            color: AppColors.primaryColor),
+                        title:
+                            Text(flower.name, style: AppStyles.listTileTitle),
+                        subtitle: Text('Quantity: ${flower.quantity}',
+                            style: AppStyles.listTileSubtitle),
+                        trailing: Icon(Icons.arrow_forward_ios,
+                            size: 16, color: Colors.grey),
                       ),
-                    ).then((_) {
-                      _fetchFlowers(); // Refresh the list after returning
-                    });
-                  },
+                    ),
+                  ),
                 );
               },
             ),

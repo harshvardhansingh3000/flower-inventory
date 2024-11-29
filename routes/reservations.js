@@ -18,7 +18,7 @@ router.post('/', verifyToken, async (req, res) => {
   `;
   try {
     const result = await pool.query(sql, [userId, flower_id, quantity, sell_date, party_name, status]);
-    await auditLog(userId, 'CREATE_RESERVATION', `Created reservation with ID ${result.rows[0].id}`);
+    await auditLog(userId, 'CREATE_RESERVATION', `Created reservation with ID ${result.rows[0].id}`,result.rows[0].id);
     res.status(201).json(result.rows[0]);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -27,7 +27,16 @@ router.post('/', verifyToken, async (req, res) => {
 
 // Get all reservations (All users can see all reservations)
 router.get('/', verifyToken, async (req, res) => {
-  const sql = 'SELECT * FROM reservations';
+  const sql = `
+    SELECT reservations.*, flowers.name AS flower_name
+    FROM reservations
+    JOIN flowers ON reservations.flower_id = flowers.id
+    ORDER BY 
+      CASE 
+        WHEN status = 'processed' THEN 2
+        ELSE 1
+      END, id;
+  `;
   try {
     const result = await pool.query(sql);
     res.json(result.rows);
@@ -36,10 +45,20 @@ router.get('/', verifyToken, async (req, res) => {
   }
 });
 
-// Get a single reservation by ID (All users can access)
+// Get a single reservation by ID
 router.get('/:id', verifyToken, async (req, res) => {
   const id = req.params.id;
-  const sql = 'SELECT * FROM reservations WHERE id = $1';
+  const sql = `
+    SELECT 
+      reservations.*, 
+      users.username AS processed_by_name, 
+      flowers.name AS flower_name
+    FROM reservations
+    LEFT JOIN users ON reservations.processed_by = users.id
+    LEFT JOIN flowers ON reservations.flower_id = flowers.id
+    WHERE reservations.id = $1
+  `;
+
   try {
     const result = await pool.query(sql, [id]);
     if (result.rows.length === 0) {
@@ -55,7 +74,7 @@ router.get('/:id', verifyToken, async (req, res) => {
 // Update a reservation
 router.put('/:id', verifyToken, async (req, res) => {
   const reservationId = req.params.id;
-  const { quantity, sell_date, party_name, status } = req.body;
+  const { quantity, sell_date, party_name, flower_id } = req.body;
   const { role, id: userId } = req.user;
 
   // Fetch existing reservation
@@ -68,15 +87,8 @@ router.put('/:id', verifyToken, async (req, res) => {
     const reservation = resResult.rows[0];
 
     // Authorization
-    if (role === 'Staff') {
-      if (reservation.user_id !== userId) {
-        return res.status(403).json({ error: 'Access denied' });
-      }
-    } else if (role === 'Admin' || role === 'Manager') {
-      // Admins and Managers can update any reservation
-    } else {
-      // Other roles cannot update reservations
-      return res.status(403).json({ error: 'Access denied' });
+    if (role !== 'Admin' && role !== 'Manager' && reservation.user_id !== userId) {
+      return res.status(403).json({ error: 'Unauthorized' });
     }
 
     // Build update query
@@ -96,14 +108,9 @@ router.put('/:id', verifyToken, async (req, res) => {
       updateFields.push(`party_name = $${paramIndex++}`);
       params.push(party_name);
     }
-    if (status !== undefined) {
-      // Allow status update only for Admins and Managers
-      if (role === 'Admin' || role === 'Manager') {
-        updateFields.push(`status = $${paramIndex++}`);
-        params.push(status);
-      } else {
-        return res.status(403).json({ error: 'Access denied to change status' });
-      }
+    if (flower_id !== undefined) {
+      updateFields.push(`flower_id = $${paramIndex++}`);
+      params.push(flower_id);
     }
 
     if (updateFields.length === 0) {
@@ -118,7 +125,7 @@ router.put('/:id', verifyToken, async (req, res) => {
     await pool.query('DELETE FROM audit_logs WHERE details LIKE $1', [`%reservation with ID ${reservationId}%`]);
 
     // Add new audit log entry
-    await auditLog(userId, 'UPDATE_RESERVATION', `Updated reservation with ID ${reservationId}`); 
+    await auditLog(userId, 'UPDATE_RESERVATION', `Updated reservation with ID ${reservationId}`,reservationId); 
 
     res.json(result.rows[0]);
   } catch (err) {
@@ -150,7 +157,7 @@ router.delete('/:id', verifyToken, async (req, res) => {
 
     const deleteSql = 'DELETE FROM reservations WHERE id = $1 RETURNING *';
     await pool.query(deleteSql, [reservationId]);
-    await auditLog(userId, 'DELETE_RESERVATION', `Deleted reservation with ID ${reservationId}`);
+    await auditLog(userId, 'DELETE_RESERVATION', `Deleted reservation with ID ${reservationId}`,reservationId);
     res.json({ message: 'Reservation deleted successfully' });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -160,7 +167,7 @@ router.delete('/:id', verifyToken, async (req, res) => {
 // Process a reservation (Admins and Managers only)
 router.post('/process/:id', verifyToken, async (req, res) => {
   const reservationId = req.params.id;
-  const { role } = req.user;
+  const { role,id: userId } = req.user;
 
   if (role !== 'Admin' && role !== 'Manager') {
     return res.status(403).json({ error: 'Access denied' });
@@ -195,14 +202,15 @@ router.post('/process/:id', verifyToken, async (req, res) => {
     const updateFlowerQuery = 'UPDATE flowers SET quantity = quantity - $1 WHERE id = $2 RETURNING *';
     await pool.query(updateFlowerQuery, [reservation.quantity, reservation.flower_id]);
 
-    // Delete the reservation
-    const deleteReservationQuery = 'DELETE FROM reservations WHERE id = $1 RETURNING *';
-    await pool.query(deleteReservationQuery, [reservationId]);
+    // Update the reservation
+    const updateReservationSql = 'UPDATE reservations SET status = $1, processed_by = $2 WHERE id = $3';
+    await pool.query(updateReservationSql, ['processed', userId, reservationId]);
 
     await auditLog(
       req.user.id,
       'PROCESS_RESERVATION',
-      `Processed reservation ID: ${reservation.id} for flower ID: ${reservation.flower_id}`
+      `Processed reservation ID: ${reservation.id} for flower ID: ${reservation.flower_id}`,
+      reservation.id
     );
 
     // Commit the transaction

@@ -71,10 +71,10 @@ router.post('/', verifyToken, async (req, res) => {
   if (role !== 'Admin' && role !== 'Manager') {
     return res.status(403).json({ error: 'Access denied' });
   }
-  const { name, description, quantity } = req.body;
-  const sql = 'INSERT INTO flowers (name, description, quantity) VALUES ($1, $2, $3) RETURNING *';
+  const { name, description, quantity, threshold } = req.body;
+  const sql = 'INSERT INTO flowers (name, description, quantity,threshold) VALUES ($1, $2, $3, $4) RETURNING *';
   try {
-    const result = await pool.query(sql, [name, description, quantity]);
+    const result = await pool.query(sql, [name, description, quantity, threshold]);
     res.status(201).json(result.rows[0]);
   } catch (err) {
     res.status(500).json({ error: err.message });

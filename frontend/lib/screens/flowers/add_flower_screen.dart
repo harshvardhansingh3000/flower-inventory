@@ -130,7 +130,7 @@ class _AddFlowerScreenState extends State<AddFlowerScreen> {
                   return null;
                 },
               ),
-              SizedBox(height: 16),
+              SizedBox(height: 24),
               // Threshold Field
               TextFormField(
                 controller: _thresholdController,
