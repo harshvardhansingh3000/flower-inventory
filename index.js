@@ -9,6 +9,7 @@ import userRoutes from './routes/users.js';
 import reservationRoutes from './routes/reservations.js';
 import initAdmin from './initAdmin.js';
 import auditRoutes from './routes/audit.js';
+import initDatabase from './initDatabase.js';
 
 
 dotenv.config();
@@ -24,8 +25,22 @@ app.use('/api/audit', auditRoutes);
 
 const port = process.env.PORT || 3000; // Use environment port or default to 3000
 
-initAdmin().then(() => {
-  app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
-  });
-});
+const startServer = async () => {
+  try {
+    // Initialize the database tables
+    await initDatabase();
+
+    // Initialize the admin user
+    await initAdmin();
+
+    // Start the server
+    app.listen(port, () => {
+      console.log(`Server is running on port ${port}`);
+    });
+  } catch (err) {
+    console.error('Error starting server:', err);
+    process.exit(1);
+  }
+};
+
+startServer();
