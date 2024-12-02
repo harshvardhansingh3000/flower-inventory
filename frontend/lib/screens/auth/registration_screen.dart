@@ -25,7 +25,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       final String username = _usernameController.text.trim();
       final String password = _passwordController.text;
 
-      final Uri url = Uri.parse('http://10.0.2.2:3000/api/users/register');
+      final Uri url = Uri.parse('${AppConstants.apiBaseUrl}/users/register');
 
       try {
         final response = await http.post(

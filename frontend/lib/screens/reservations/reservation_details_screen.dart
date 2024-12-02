@@ -46,7 +46,7 @@ class _ReservationDetailsScreenState extends State<ReservationDetailsScreen> {
   Future<void> _fetchReservation() async {
     final response = await http.get(
       Uri.parse(
-          'http://10.0.2.2:3000/api/reservations/${widget.reservationId}'),
+          '${AppConstants.apiBaseUrl}/reservations/${widget.reservationId}'),
       headers: {'Authorization': 'Bearer ${widget.token}'},
     );
 
@@ -82,7 +82,7 @@ class _ReservationDetailsScreenState extends State<ReservationDetailsScreen> {
     if (confirmDelete) {
       final response = await http.delete(
         Uri.parse(
-            'http://10.0.2.2:3000/api/reservations/${widget.reservation!.id}'),
+            '${AppConstants.apiBaseUrl}/reservations/${widget.reservation!.id}'),
         headers: {'Authorization': 'Bearer ${widget.token}'},
       );
 
@@ -101,7 +101,7 @@ class _ReservationDetailsScreenState extends State<ReservationDetailsScreen> {
 
     final response = await http.post(
       Uri.parse(
-          'http://10.0.2.2:3000/api/reservations/process/${_reservation!.id}'),
+          '${AppConstants.apiBaseUrl}/reservations/process/${_reservation!.id}'),
       headers: {'Authorization': 'Bearer ${widget.token}'},
     );
 

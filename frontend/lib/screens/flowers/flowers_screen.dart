@@ -39,7 +39,7 @@ class _FlowersScreenState extends State<FlowersScreen> {
 
   Future<void> _fetchFlowers() async {
     final response = await http.get(
-      Uri.parse('http://10.0.2.2:3000/api/flowers'),
+      Uri.parse('${AppConstants.apiBaseUrl}/flowers'),
       headers: {'Authorization': 'Bearer ${widget.token}'},
     );
 

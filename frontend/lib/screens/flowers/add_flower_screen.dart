@@ -31,7 +31,7 @@ class _AddFlowerScreenState extends State<AddFlowerScreen> {
       final int quantity = int.parse(_quantityController.text);
       final int threshold = int.parse(_thresholdController.text);
 
-      final Uri url = Uri.parse('http://10.0.2.2:3000/api/flowers');
+      final Uri url = Uri.parse('${AppConstants.apiBaseUrl}/flowers');
 
       try {
         final response = await http.post(

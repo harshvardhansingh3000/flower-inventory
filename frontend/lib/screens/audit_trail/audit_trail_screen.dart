@@ -27,7 +27,7 @@ class _AuditTrailScreenState extends State<AuditTrailScreen> {
 
   Future<void> _fetchAuditLogs() async {
     final response = await http.get(
-      Uri.parse('http://10.0.2.2:3000/api/audit'),
+      Uri.parse('${AppConstants.apiBaseUrl}/audit'),
       headers: {'Authorization': 'Bearer ${widget.token}'},
     );
 

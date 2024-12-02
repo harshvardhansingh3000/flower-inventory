@@ -26,7 +26,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
 
   Future<void> _fetchUsers() async {
     final response = await http.get(
-      Uri.parse('http://10.0.2.2:3000/api/users'),
+      Uri.parse('${AppConstants.apiBaseUrl}/users'),
       headers: {'Authorization': 'Bearer ${widget.token}'},
     );
 
@@ -46,7 +46,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
 
   void _changeUserRole(int userId, String newRole) async {
     final response = await http.put(
-      Uri.parse('http://10.0.2.2:3000/api/users/$userId/role'),
+      Uri.parse('${AppConstants.apiBaseUrl}/users/$userId/role'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ${widget.token}',

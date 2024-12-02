@@ -38,7 +38,7 @@ class _LowStockScreenState extends State<LowStockScreen> {
 
   Future<void> _fetchLowStockFlowers() async {
     final response = await http.get(
-      Uri.parse('http://10.0.2.2:3000/api/flowers/low-stock/all'),
+      Uri.parse('${AppConstants.apiBaseUrl}/flowers/low-stock/all'),
       headers: {'Authorization': 'Bearer ${widget.token}'},
     );
 

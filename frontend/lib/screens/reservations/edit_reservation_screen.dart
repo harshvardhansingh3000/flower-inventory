@@ -46,7 +46,7 @@ class _EditReservationScreenState extends State<EditReservationScreen> {
 
   Future<void> _fetchFlowers() async {
     final response = await http.get(
-      Uri.parse('http://10.0.2.2:3000/api/flowers'),
+      Uri.parse('${AppConstants.apiBaseUrl}/flowers'),
       headers: {'Authorization': 'Bearer ${widget.token}'},
     );
 
@@ -101,7 +101,7 @@ class _EditReservationScreenState extends State<EditReservationScreen> {
       final int flowerId = _selectedFlower!.id;
 
       final Uri url = Uri.parse(
-          'http://10.0.2.2:3000/api/reservations/${widget.reservation.id}');
+          '${AppConstants.apiBaseUrl}/reservations/${widget.reservation.id}');
 
       try {
         final response = await http.put(

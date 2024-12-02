@@ -2,6 +2,11 @@
 
 import 'package:flutter/material.dart';
 
+class AppConstants {
+  static const String apiBaseUrl =
+      'https://flower-inventory-production.up.railway.app/api';
+}
+
 class AppColors {
   static const primaryColor = Color(0xFF4CAF50);
   static const accentColor = Color(0xFF81C784);

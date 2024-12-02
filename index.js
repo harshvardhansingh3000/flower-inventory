@@ -11,7 +11,6 @@ import initAdmin from './initAdmin.js';
 import auditRoutes from './routes/audit.js';
 import initDatabase from './initDatabase.js';
 
-
 dotenv.config();
 
 const app = express();
@@ -22,6 +21,9 @@ app.use('/api/flowers', flowerRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/reservations', reservationRoutes);
 app.use('/api/audit', auditRoutes);
+app.get('/', (req, res) => {
+  res.send('Welcome to the API! The server is up and running.');
+});
 
 const port = process.env.PORT || 3000; // Use environment port or default to 3000
 

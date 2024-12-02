@@ -42,7 +42,7 @@ class _FlowerDetailsScreenState extends State<FlowerDetailsScreen> {
 
   Future<void> _fetchFlowerDetails() async {
     final response = await http.get(
-      Uri.parse('http://10.0.2.2:3000/api/flowers/${widget.flowerId}'),
+      Uri.parse('${AppConstants.apiBaseUrl}/flowers/${widget.flowerId}'),
       headers: {'Authorization': 'Bearer ${widget.token}'},
     );
 
@@ -95,7 +95,7 @@ class _FlowerDetailsScreenState extends State<FlowerDetailsScreen> {
       });
 
       final response = await http.delete(
-        Uri.parse('http://10.0.2.2:3000/api/flowers/${_flower!.id}'),
+        Uri.parse('${AppConstants.apiBaseUrl}/flowers/${_flower!.id}'),
         headers: {'Authorization': 'Bearer ${widget.token}'},
       );
 

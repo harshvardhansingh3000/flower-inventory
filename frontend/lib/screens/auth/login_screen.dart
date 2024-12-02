@@ -136,7 +136,7 @@ class _LoginScreenState extends State<LoginScreen> {
       final String username = _usernameController.text.trim();
       final String password = _passwordController.text;
 
-      final Uri url = Uri.parse('http://10.0.2.2:3000/api/users/login');
+      final Uri url = Uri.parse('${AppConstants.apiBaseUrl}/users/login');
 
       try {
         final response = await http.post(

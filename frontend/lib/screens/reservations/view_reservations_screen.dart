@@ -40,7 +40,7 @@ class _ViewReservationsScreenState extends State<ViewReservationsScreen> {
 
   Future<void> _fetchReservations() async {
     final response = await http.get(
-      Uri.parse('http://10.0.2.2:3000/api/reservations'),
+      Uri.parse('${AppConstants.apiBaseUrl}/reservations'),
       headers: {'Authorization': 'Bearer ${widget.token}'},
     );
 

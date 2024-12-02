@@ -32,7 +32,7 @@ class _EditFlowerScreenState extends State<EditFlowerScreen> {
     setState(() => _isLoading = true);
 
     final Uri url =
-        Uri.parse('http://10.0.2.2:3000/api/flowers/${widget.flower.id}');
+        Uri.parse('${AppConstants.apiBaseUrl}/flowers/${widget.flower.id}');
 
     try {
       final response = await http.get(
@@ -70,7 +70,7 @@ class _EditFlowerScreenState extends State<EditFlowerScreen> {
       final int threshold = int.parse(_thresholdController.text);
 
       final Uri url =
-          Uri.parse('http://10.0.2.2:3000/api/flowers/${widget.flower.id}');
+          Uri.parse('${AppConstants.apiBaseUrl}/flowers/${widget.flower.id}');
 
       try {
         final response = await http.put(
