@@ -5,6 +5,12 @@ plugins {
     id "dev.flutter.flutter-gradle-plugin"
 }
 
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file('key.properties')
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
 android {
     namespace = "com.example.frontend"
     compileSdk = flutter.compileSdkVersion
@@ -17,6 +23,14 @@ android {
 
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_1_8
+    }
+    signingConfigs {
+        release {
+            keyAlias keystoreProperties['keyAlias']
+            keyPassword keystoreProperties['keyPassword']
+            storeFile keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null
+            storePassword keystoreProperties['storePassword']
+        }
     }
 
     defaultConfig {
@@ -32,11 +46,30 @@ android {
 
     buildTypes {
         release {
+            signingConfig signingConfigs.release
+            minifyEnabled true // Enable code shrinking
+            shrinkResources true // Enable resource shrinking
+            // proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.debug
         }
     }
+}
+dependencies {
+    // ... your other dependencies ...
+
+    // Add the error-prone annotations library
+    implementation 'com.google.errorprone:error_prone_annotations:2.11.0'
+
+    // Add javax.annotation library
+    implementation 'javax.annotation:javax.annotation-api:1.3.2'
+
+    // Add checker-qual for annotations
+    implementation 'org.checkerframework:checker-qual:3.27.0'
+
+    // Optional: Add guava if needed
+    implementation 'com.google.guava:guava:31.1-android'
 }
 
 flutter {
