@@ -12,17 +12,15 @@ import 'package:intl/intl.dart';
 
 class ReservationDetailsScreen extends StatefulWidget {
   final String token;
-  final Reservation? reservation;
   final String? role;
   final int? userId;
-  final int? reservationId;
+  final int reservationId;
 
   ReservationDetailsScreen({
     required this.token,
-    this.reservation,
     this.role,
     this.userId,
-    this.reservationId,
+    required this.reservationId,
   });
 
   @override
@@ -36,11 +34,7 @@ class _ReservationDetailsScreenState extends State<ReservationDetailsScreen> {
   @override
   void initState() {
     super.initState();
-    if (widget.reservation != null) {
-      _reservation = widget.reservation;
-    } else if (widget.reservationId != null) {
-      _fetchReservation();
-    }
+    _fetchReservation();
   }
 
   Future<void> _fetchReservation() async {
@@ -57,6 +51,7 @@ class _ReservationDetailsScreenState extends State<ReservationDetailsScreen> {
       });
     } else {
       _showMessage('Failed to fetch reservation details.');
+      Navigator.pop(context);
     }
   }
 
@@ -82,7 +77,7 @@ class _ReservationDetailsScreenState extends State<ReservationDetailsScreen> {
     if (confirmDelete) {
       final response = await http.delete(
         Uri.parse(
-            '${AppConstants.apiBaseUrl}/reservations/${widget.reservation!.id}'),
+            '${AppConstants.apiBaseUrl}/reservations/${_reservation!.id}'),
         headers: {'Authorization': 'Bearer ${widget.token}'},
       );
 
@@ -146,14 +141,14 @@ class _ReservationDetailsScreenState extends State<ReservationDetailsScreen> {
   }
 
   bool get canEditOrDelete {
-    return widget.role == 'Admin' ||
+    return (widget.role == 'Admin' ||
         widget.role == 'Manager' ||
-        (widget.role == 'Staff' && widget.reservation!.userId == widget.userId);
+        (widget.role == 'Staff' && _reservation!.userId == widget.userId));
   }
 
   bool get canProcess {
     return (widget.role == 'Admin' || widget.role == 'Manager') &&
-        widget.reservation!.status == 'pending';
+        _reservation!.status == 'pending';
   }
 
   @override
@@ -198,7 +193,7 @@ class _ReservationDetailsScreenState extends State<ReservationDetailsScreen> {
             Text('Status: ${_reservation!.status}',
                 style: AppStyles.detailContent),
             SizedBox(height: 16),
-            if (_reservation!.status == 'processed' &&
+            if (_reservation!.status.toLowerCase() == 'processed' &&
                 _reservation!.processedByName != null)
               Text('Processed By: ${_reservation!.processedByName}',
                   style: AppStyles.detailContent),
@@ -207,11 +202,13 @@ class _ReservationDetailsScreenState extends State<ReservationDetailsScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  ElevatedButton(
-                    style: AppStyles.buttonStyle,
-                    onPressed: _navigateToEditReservation,
-                    child: Text('Edit Reservation'),
-                  ),
+                  if (_reservation!.status.toLowerCase() !=
+                      'processed') // Conditional check
+                    ElevatedButton(
+                      style: AppStyles.buttonStyle,
+                      onPressed: _navigateToEditReservation,
+                      child: Text('Edit Reservation'),
+                    ),
                   ElevatedButton(
                     style: AppStyles.buttonStyle.copyWith(
                       backgroundColor: WidgetStateProperty.all(Colors.red),

@@ -6,7 +6,7 @@ import { verifyToken } from './users.js'; // Ensure this middleware is exported 
 const router = express.Router();
 
 // Search flowers
-router.get('/search', async (req, res) => {
+router.get('/search',verifyToken, async (req, res) => {
   const { name, minQuantity } = req.query;
   let sql = 'SELECT * FROM flowers WHERE 1=1';
   const params = [];
@@ -39,7 +39,7 @@ router.get('/search', async (req, res) => {
 });
 
 // Get all flowers
-router.get('/', async (req, res) => {
+router.get('/',verifyToken, async (req, res) => {
   const sql = 'SELECT * FROM flowers';
   try {
     const result = await pool.query(sql);
@@ -50,7 +50,7 @@ router.get('/', async (req, res) => {
 });
 
 // Get a single flower by ID
-router.get('/:id', async (req, res) => {
+router.get('/:id',verifyToken, async (req, res) => {
   const id = req.params.id;
   const sql = 'SELECT * FROM flowers WHERE id = $1';
   try {

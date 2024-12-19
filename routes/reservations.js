@@ -25,25 +25,74 @@ router.post('/', verifyToken, async (req, res) => {
   }
 });
 
-// Get all reservations (All users can see all reservations)
+// Get all reservations with filters
 router.get('/', verifyToken, async (req, res) => {
-  const sql = `
-    SELECT reservations.*, flowers.name AS flower_name
+  const { role, id: userId } = req.user;
+
+  // Retrieve query parameters
+  const { partyName, processedBy, flowerName, month } = req.query;
+
+  let sql = `
+    SELECT 
+      reservations.*,
+      users.username AS user_name,
+      processed_by_user.username AS processed_by_name,
+      flowers.name AS flower_name
     FROM reservations
+    JOIN users ON reservations.user_id = users.id
+    LEFT JOIN users AS processed_by_user ON reservations.processed_by = processed_by_user.id
     JOIN flowers ON reservations.flower_id = flowers.id
-    ORDER BY 
-      CASE 
-        WHEN status = 'processed' THEN 2
-        ELSE 1
-      END, id;
   `;
+
+  const params = [];
+  const conditions = [];
+
+  // Restrict access for Staff
+  if (role === 'Staff') {
+    conditions.push(`reservations.user_id = $${params.length + 1}`);
+    params.push(userId);
+  }
+
+  // Apply filters
+  if (partyName) {
+    conditions.push(`reservations.party_name ILIKE $${params.length + 1}`);
+    params.push(`%${partyName}%`);
+  }
+
+  if (processedBy) {
+    conditions.push(`processed_by_user.username ILIKE $${params.length + 1}`);
+    params.push(`%${processedBy}%`);
+  }
+
+  if (flowerName) {
+    conditions.push(`flowers.name ILIKE $${params.length + 1}`);
+    params.push(`%${flowerName}%`);
+  }
+
+  if (month) {
+    conditions.push(`EXTRACT(MONTH FROM reservations.sell_date) = $${params.length + 1}`);
+    params.push(month);
+  }
+
+  if (conditions.length > 0) {
+    sql += ' WHERE ' + conditions.join(' AND ');
+  }
+
+  sql += `
+    ORDER BY 
+      CASE WHEN reservations.status = 'processed' THEN 2 ELSE 1 END, 
+      reservations.id;
+  `;
+
   try {
-    const result = await pool.query(sql);
+    const result = await pool.query(sql, params);
     res.json(result.rows);
   } catch (err) {
+    console.error('Error fetching reservations:', err);
     res.status(500).json({ error: err.message });
   }
 });
+
 
 // Get a single reservation by ID
 router.get('/:id', verifyToken, async (req, res) => {
@@ -163,6 +212,33 @@ router.delete('/:id', verifyToken, async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// Delete all processed reservations (Admin only)
+router.delete('/processed/all', verifyToken, async (req, res) => {
+  const { role, id: userId } = req.user;
+
+  if (role !== 'Admin') {
+    return res.status(403).json({ error: 'Access denied' });
+  }
+
+  try {
+    const deleteSql = 'DELETE FROM reservations WHERE status = $1 RETURNING id';
+    const result = await pool.query(deleteSql, ['processed']);
+
+    const deletedIds = result.rows.map(row => row.id);
+
+    // Audit log for each deleted reservation
+    for (const reservationId of deletedIds) {
+      await auditLog(userId, 'DELETE_PROCESSED_RESERVATION', `Deleted processed reservation with ID ${reservationId}`, reservationId);
+    }
+
+    res.json({ message: 'All processed reservations deleted successfully', deletedReservationIds: deletedIds });
+  } catch (err) {
+    console.error('Error deleting processed reservations:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 
 // Process a reservation (Admins and Managers only)
 router.post('/process/:id', verifyToken, async (req, res) => {
