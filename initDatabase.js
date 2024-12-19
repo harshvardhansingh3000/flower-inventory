@@ -19,7 +19,8 @@ const initDatabase = async () => {
       name VARCHAR(255) NOT NULL,
       description TEXT,
       quantity INTEGER NOT NULL DEFAULT 0,
-      threshold INTEGER NOT NULL DEFAULT 0
+      threshold INTEGER NOT NULL DEFAULT 0,
+      image_url VARCHAR(255)
     );
   `);
 

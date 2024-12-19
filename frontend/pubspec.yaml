@@ -40,7 +40,6 @@ dependencies:
   intl: ^0.19.0
 
 dev_dependencies:
-  flutter_launcher_icons: ^0.14.1
   flutter_test:
     sdk: flutter
 
@@ -55,10 +54,6 @@ dev_dependencies:
 # following page: https://dart.dev/tools/pub/pubspec
 
 # The following section is specific to Flutter packages.
-flutter_launcher_icons:
-  android: true
-  ios: true
-  image_path: "assets/flower_icon.png"
 
 flutter:
 
@@ -68,8 +63,7 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  assets:
-    - assets/flower_icon.png
+
   
   #   - images/a_dot_ham.jpeg
 
